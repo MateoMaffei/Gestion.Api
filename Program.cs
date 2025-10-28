@@ -1,3 +1,5 @@
+using Gestion.Api.Services.Interfaces;
+using Gestion.Api.Services;
 using Microsoft.EntityFrameworkCore;
 using AppContext = Gestion.Api.Repository.AppContext;
 
@@ -7,6 +9,8 @@ builder.Services.AddDbContext<AppContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("GestionDB"));
 });
+
+builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

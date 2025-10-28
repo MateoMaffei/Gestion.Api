@@ -1,6 +1,6 @@
 ﻿namespace Gestion.Api.Models.Request
 {
-    public class CrearUsuarioRequest
+    public class UsuarioCreateRequest
     {
         public string Username { get; set; }
         public string Password { get; set; }

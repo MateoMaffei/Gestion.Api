@@ -1,6 +1,10 @@
-﻿namespace Gestion.Api.Services.Interfaces
+﻿using Gestion.Api.Models.Request;
+using Gestion.Api.Models.Response;
+
+namespace Gestion.Api.Services.Interfaces
 {
-    public class IUsuarioService
+    public interface IUsuarioService
     {
+        Task<UsuarioResponse> CrearUsuarioAsync(UsuarioCreateRequest request);
     }
 }
