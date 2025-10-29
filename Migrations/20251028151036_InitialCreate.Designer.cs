@@ -6,13 +6,13 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using AppContext = Gestion.Api.Repository.AppContext;
+using ApplicationDbContext = Gestion.Api.Repository.ApplicationDbContext;
 
 #nullable disable
 
 namespace Gestion.Api.Migrations
 {
-    [DbContext(typeof(AppContext))]
+    [DbContext(typeof(ApplicationDbContext))]
     [Migration("20251028151036_InitialCreate")]
     partial class InitialCreate
     {

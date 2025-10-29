@@ -8,15 +8,15 @@ using Gestion.Api.Models.Response;
 using Gestion.Api.Repository;
 using Gestion.Api.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using AppContext = Gestion.Api.Repository.AppContext;
+using ApplicationDbContext = Gestion.Api.Repository.ApplicationDbContext;
 
 namespace Gestion.Api.Services
 {
     public class UsuarioService : IUsuarioService
     {
-        private readonly AppContext _context;
+        private readonly ApplicationDbContext _context;
 
-        public UsuarioService(AppContext context)
+        public UsuarioService(ApplicationDbContext context)
         {
             _context = context;
         }
@@ -25,7 +25,8 @@ namespace Gestion.Api.Services
         {
             // Verificar si el Username ya existe
             var usuarioExistente = await _context.Usuarios
-                .AnyAsync(u => u.Username.ToLower() == request.Username.ToLower());
+                                                 .AnyAsync(u => u.Username.ToLower() == request.Username.ToLower() 
+                                                             && u.IdEntidad == request.IdEntidad);
 
             if (usuarioExistente)
                 throw new InvalidOperationException("El nombre de usuario ya está en uso.");

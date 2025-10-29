@@ -3,10 +3,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Gestion.Api.Repository
 {
-    public class AppContext : DbContext
+    public class ApplicationDbContext : DbContext
     {
-
-        public AppContext(DbContextOptions<AppContext> options) : base(options)
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
             
         }
