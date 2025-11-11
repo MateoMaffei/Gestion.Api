@@ -28,6 +28,13 @@ namespace Gestion.Api.Models.Entities
             builder.Property(e => e.Nombre)
                    .HasMaxLength(200)
                    .IsRequired();
+
+            builder.HasData(new Entidad
+            {
+                Id = 1,
+                IdGuid = new Guid("ED97A159-D788-4F4B-B049-4704EF3E1653"),
+                Nombre = "Somos Habitos"
+            });
         }
     }
 }

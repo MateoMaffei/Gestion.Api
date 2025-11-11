@@ -12,7 +12,9 @@ namespace Gestion.Api.Repository
 
         public DbSet<Usuario> Usuarios { get; set; }
         public DbSet<TipoUsuario> TiposUsuario { get; set; }
+
         public DbSet<Entidad> Entidades { get; set; }
+        public DbSet<RefreshToken> RefreshToken { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -21,6 +23,7 @@ namespace Gestion.Api.Repository
             modelBuilder.ApplyConfiguration(new UsuarioMap());
             modelBuilder.ApplyConfiguration(new TipoUsuarioMap());
             modelBuilder.ApplyConfiguration(new EntidadMap());
+            modelBuilder.ApplyConfiguration(new RefreshTokenMap());
         }
 
     }

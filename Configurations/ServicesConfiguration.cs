@@ -1,5 +1,7 @@
 ﻿using Gestion.Api.Services.Interfaces;
 using Gestion.Api.Services;
+using Gestion.Api.Repository.Interfaces;
+using Gestion.Api.Repository;
 
 namespace Gestion.Api.Configurations
 {
@@ -7,8 +9,12 @@ namespace Gestion.Api.Configurations
     {
         public static void AddServices(this IServiceCollection services)
         {
-            services.AddScoped<IUsuarioService, UsuarioService>();
+            services.AddScoped<IJwtService, JwtService>();
             services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IUsuarioService, UsuarioService>();
+            services.AddScoped<IRefreshTokenService, RefreshTokenService>();
+
+            services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
         }
     }
 }

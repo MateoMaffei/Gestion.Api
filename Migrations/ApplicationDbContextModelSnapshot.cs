@@ -4,20 +4,16 @@ using Gestion.Api.Repository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using ApplicationDbContext = Gestion.Api.Repository.ApplicationDbContext;
 
 #nullable disable
 
 namespace Gestion.Api.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251028151036_InitialCreate")]
-    partial class InitialCreate
+    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -45,6 +41,51 @@ namespace Gestion.Api.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Entidad", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            IdGuid = new Guid("ed97a159-d788-4f4b-b049-4704ef3e1653"),
+                            Nombre = "Somos Habitos"
+                        });
+                });
+
+            modelBuilder.Entity("Gestion.Api.Models.Entities.RefreshToken", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("Expiracion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("IdGuid")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier")
+                        .HasDefaultValueSql("(newid())");
+
+                    b.Property<int>("IdUsuario")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("Revocado")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdUsuario")
+                        .IsUnique();
+
+                    b.ToTable("RefreshToken", (string)null);
                 });
 
             modelBuilder.Entity("Gestion.Api.Models.Entities.TipoUsuario", b =>
@@ -61,7 +102,9 @@ namespace Gestion.Api.Migrations
                         .HasColumnType("nvarchar(150)");
 
                     b.Property<Guid>("IdGuid")
-                        .HasColumnType("uniqueidentifier");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier")
+                        .HasDefaultValueSql("(newid())");
 
                     b.HasKey("Id");
 
@@ -110,7 +153,9 @@ namespace Gestion.Api.Migrations
                         .HasColumnType("int");
 
                     b.Property<Guid>("IdGuid")
-                        .HasColumnType("uniqueidentifier");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier")
+                        .HasDefaultValueSql("(newid())");
 
                     b.Property<int>("IdTipoUsuario")
                         .HasColumnType("int");
@@ -121,6 +166,11 @@ namespace Gestion.Api.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Password")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
@@ -137,6 +187,17 @@ namespace Gestion.Api.Migrations
                     b.HasIndex("IdTipoUsuario");
 
                     b.ToTable("Usuario", (string)null);
+                });
+
+            modelBuilder.Entity("Gestion.Api.Models.Entities.RefreshToken", b =>
+                {
+                    b.HasOne("Gestion.Api.Models.Entities.Usuario", "Usuario")
+                        .WithOne("RefreshToken")
+                        .HasForeignKey("Gestion.Api.Models.Entities.RefreshToken", "IdUsuario")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Usuario");
                 });
 
             modelBuilder.Entity("Gestion.Api.Models.Entities.Usuario", b =>
@@ -156,6 +217,11 @@ namespace Gestion.Api.Migrations
                     b.Navigation("Entidad");
 
                     b.Navigation("TipoUsuario");
+                });
+
+            modelBuilder.Entity("Gestion.Api.Models.Entities.Usuario", b =>
+                {
+                    b.Navigation("RefreshToken");
                 });
 #pragma warning restore 612, 618
         }

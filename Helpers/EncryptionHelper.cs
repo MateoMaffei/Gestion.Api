@@ -5,7 +5,42 @@ namespace Gestion.Api.Helpers
 {
     public class EncryptionHelper
     {
-        public static string DecryptStringAES(string cipherTextBase64, string secretKey)
+        public static string EncryptAES(string plainText, string secretKey)
+        {
+            try
+            {
+                using var aes = Aes.Create();
+                aes.Key = Encoding.UTF8.GetBytes(secretKey);
+                aes.GenerateIV(); // IV aleatorio para cada cifrado
+
+                using var encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
+                using var ms = new MemoryStream();
+
+                // 🔒 Ciframos el texto plano
+                using (var cs = new CryptoStream(ms, encryptor, CryptoStreamMode.Write))
+                using (var sw = new StreamWriter(cs))
+                {
+                    sw.Write(plainText);
+                }
+
+                var encryptedBytes = ms.ToArray();
+
+                // 🔗 Concatenamos IV + datos cifrados
+                var combined = new byte[aes.IV.Length + encryptedBytes.Length];
+                Array.Copy(aes.IV, 0, combined, 0, aes.IV.Length);
+                Array.Copy(encryptedBytes, 0, combined, aes.IV.Length, encryptedBytes.Length);
+
+                // 🔤 Codificamos todo en Base64 para enviar
+                return Convert.ToBase64String(combined);
+            }
+            catch
+            {
+                throw new InvalidOperationException("No se pudo encriptar el texto.");
+            }
+        }
+
+
+        public static string DecryptAES(string cipherTextBase64, string secretKey)
         {
             try
             {

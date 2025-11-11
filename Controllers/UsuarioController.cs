@@ -17,6 +17,7 @@ namespace Gestion.Api.Controllers
         }
 
         [HttpPost]
+        [Authorize]
         public async Task<IActionResult> CrearUsuario([FromBody] UsuarioCreateRequest request)
         {
             try

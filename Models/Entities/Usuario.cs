@@ -10,16 +10,16 @@ namespace Gestion.Api.Models.Entities
         public Guid IdGuid { get; set; }
         public string Username { get; set; }
         public string Password { get; set; }
+        public string PasswordHash { get; set; }
         public string Nombre { get; set; }
         public string Apellido { get; set; }
         public DateTime FechaAlta { get; set; }
         public int IdTipoUsuario { get; set; }
-        public TipoUsuario TipoUsuario { get; set; }
+        public virtual TipoUsuario TipoUsuario { get; set; }
         public int IdEntidad { get; set; }
-        public Entidad Entidad { get; set; }
+        public virtual Entidad Entidad { get; set; }
+        public virtual RefreshToken? RefreshToken { get; set; }
     }
-
-
 
     public class UsuarioMap : IEntityTypeConfiguration<Usuario>
     {
@@ -33,13 +33,19 @@ namespace Gestion.Api.Models.Entities
                    .ValueGeneratedOnAdd();
 
             builder.Property(u => u.IdGuid)
-                   .IsRequired();
+                   .ValueGeneratedOnAdd()
+                   .IsRequired()
+                   .HasDefaultValueSql("(newid())");
 
             builder.Property(u => u.Username)
                    .HasMaxLength(100)
                    .IsRequired();
 
             builder.Property(u => u.Password)
+                   .HasMaxLength(200)
+                   .IsRequired();
+
+            builder.Property(u => u.PasswordHash)
                    .HasMaxLength(200)
                    .IsRequired();
 

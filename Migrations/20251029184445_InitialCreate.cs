@@ -33,7 +33,7 @@ namespace Gestion.Api.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    IdGuid = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    IdGuid = table.Column<Guid>(type: "uniqueidentifier", nullable: false, defaultValueSql: "(newid())"),
                     Descripcion = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: false)
                 },
                 constraints: table =>
@@ -47,9 +47,10 @@ namespace Gestion.Api.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    IdGuid = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    IdGuid = table.Column<Guid>(type: "uniqueidentifier", nullable: false, defaultValueSql: "(newid())"),
                     Username = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     Password = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    PasswordHash = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
                     Nombre = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     Apellido = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     FechaAlta = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETDATE()"),
@@ -71,6 +72,34 @@ namespace Gestion.Api.Migrations
                         principalColumn: "Id");
                 });
 
+            migrationBuilder.CreateTable(
+                name: "RefreshToken",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    IdGuid = table.Column<Guid>(type: "uniqueidentifier", nullable: false, defaultValueSql: "(newid())"),
+                    IdUsuario = table.Column<int>(type: "int", nullable: false),
+                    Token = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    Expiracion = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Revocado = table.Column<bool>(type: "bit", nullable: false, defaultValue: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RefreshToken", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_RefreshToken_Usuario_IdUsuario",
+                        column: x => x.IdUsuario,
+                        principalTable: "Usuario",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.InsertData(
+                table: "Entidad",
+                columns: new[] { "Id", "IdGuid", "Nombre" },
+                values: new object[] { 1, new Guid("ed97a159-d788-4f4b-b049-4704ef3e1653"), "Somos Habitos" });
+
             migrationBuilder.InsertData(
                 table: "TipoUsuario",
                 columns: new[] { "Id", "Descripcion", "IdGuid" },
@@ -80,6 +109,12 @@ namespace Gestion.Api.Migrations
                     { 2, "Empleado", new Guid("c1a321cc-7a0a-4079-a6d2-d17f9f045fd3") },
                     { 3, "Usuario", new Guid("ad9b7732-2a84-4c78-9a47-717d5b47eef0") }
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RefreshToken_IdUsuario",
+                table: "RefreshToken",
+                column: "IdUsuario",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Usuario_IdEntidad",
@@ -95,6 +130,9 @@ namespace Gestion.Api.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "RefreshToken");
+
             migrationBuilder.DropTable(
                 name: "Usuario");
 

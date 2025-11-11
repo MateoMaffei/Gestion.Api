@@ -7,28 +7,44 @@ using Gestion.Api.Helpers;
 using Gestion.Api.Models.Entities;
 using Gestion.Api.Models.Request;
 using Gestion.Api.Models.Response;
+using Gestion.Api.Repository;
+using Gestion.Api.Repository.Interfaces;
 using Gestion.Api.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using ApplicationDbContext = Gestion.Api.Repository.ApplicationDbContext;
 
 namespace Gestion.Api.Services
 {
     public class AuthService : IAuthService
     {
-        private readonly ApplicationDbContext _db;
+        private readonly ILogger<AuthService> _logger;
+        private readonly ApplicationDbContext _context;
         private readonly JwtSettingsOptions _jwtSettingsOptions;
+        private readonly EncryptionOptions _encryptionOptions;
+        private readonly IRefreshTokenService _refreshTokenService;
+        private readonly IJwtService _jwtService;
 
-        public AuthService(ApplicationDbContext db, IOptions<JwtSettingsOptions> cfg)
+        public AuthService(ApplicationDbContext db, 
+                           ILogger<AuthService> logger, 
+                           ApplicationDbContext context, 
+                           IOptions<JwtSettingsOptions> jwtSettingsOptions,
+                           IOptions<EncryptionOptions> encryptionOptions,
+                           IRefreshTokenService refreshTokenService,
+                           IJwtService jwtService)
         {
-            _db = db;
-            _jwtSettingsOptions = cfg.Value;
+            _context = db;
+            _logger = logger;
+            _context = context;
+            _jwtSettingsOptions = jwtSettingsOptions.Value;
+            _encryptionOptions = encryptionOptions.Value;
+            _jwtService = jwtService;
+            _refreshTokenService = refreshTokenService;
         }
 
         public async Task<TokenResponse> LoginAsync(LoginRequest request)
         {
-            var user = await _db.Usuarios
+            var user = await _context.Usuarios
                 .Include(u => u.TipoUsuario)
                 .Include(u => u.Entidad)
                 .FirstOrDefaultAsync(u =>
@@ -38,84 +54,98 @@ namespace Gestion.Api.Services
             if (user is null)
                 throw new InvalidOperationException("Usuario o contraseña inválidos.");
 
-            if (!BCrypt.Net.BCrypt.Verify(request.Password, user.Password))
-                throw new InvalidOperationException("Credenciales inválidas.");
+            var decryptedPassword = EncryptionHelper.DecryptAES(request.Password, _encryptionOptions.AesKey);
 
-            // 🔐 Desencriptar password recibido
-            var decryptedPass = EncryptionHelper.DecryptStringAES(request.Password, _jwtSettingsOptions.Key);
+            if (!BCrypt.Net.BCrypt.Verify(decryptedPassword, user.PasswordHash))
+                throw new InvalidOperationException("Contraseña incorrecta");
 
-            // Comparar contra hash almacenado
-            var valid = BCrypt.Net.BCrypt.Verify(decryptedPass, user.Password);
-            if (!valid)
-                throw new InvalidOperationException("Credenciales inválidas.");
+            var (token, tokenExpiration) = _jwtService.CreateAccessToken(user);
+            var (refreshToken, refreshTokenExpiration) = _jwtService.CreateRefreshToken();
 
-            var (access, aexp) = CreateAccessToken(user);
-            var (refresh, rexp) = CreateRefreshToken();
+            await _refreshTokenService.GuardarTokenAsync(refreshToken, refreshTokenExpiration, user.Id);
 
-            // Si quieres persistir refresh token por usuario:
-            // (no cambia tu modelo; podés crear una tabla/columna luego)
-            // Por ahora lo devolvemos sin persistir.
+            await _context.SaveChangesAsync();
 
             return new TokenResponse
             {
-                AccessToken = access,
-                AccessTokenExpiresAt = aexp,
-                RefreshToken = refresh,
-                RefreshTokenExpiresAt = rexp,
-                RolId = user.IdTipoUsuario,
+                JwtToken = token,
+                JwtTokenExpiresAt = tokenExpiration,
+                RefreshToken = refreshToken,
+                RefreshTokenExpiresAt = refreshTokenExpiration,
+                RolId = user.TipoUsuario.IdGuid,
                 Rol = user.TipoUsuario?.Descripcion ?? user.IdTipoUsuario.ToString(),
-                IdEntidad = user.IdEntidad,
+                IdEntidad = user.Entidad.IdGuid,
                 UserIdGuid = user.IdGuid,
                 Username = user.Username
             };
         }
 
-        public async Task<TokenResponse> RefreshAsync(RefreshRequest request)
+        public async Task<TokenResponse> RefreshTokenAsync(string token)
         {
-            // Aquí validarías contra persistencia si decides guardarlos.
-            // Por ahora rechazamos refresh inválidos por formato.
-            if (string.IsNullOrWhiteSpace(request.RefreshToken))
-                throw new InvalidOperationException("Refresh token inválido.");
+            var usuario = await _context.Usuarios
+                                        .Include(u => u.RefreshToken)
+                                        .Include(u => u.TipoUsuario)
+                                        .Include(u => u.Entidad)
+                                        .FirstOrDefaultAsync(x => x.RefreshToken != null && x.RefreshToken.Token.Equals(token));
 
-            // Estrategia mínima: exigir un access token vencido y reemitir
-            // si el cliente presenta un refresh. En esta versión demo,
-            // pedimos que el cliente envíe también Username si quisieras reforzar.
+            if(usuario is null)
+                throw new InvalidOperationException("Se produjo un error o los datos enviados no corresponden.");
 
-            throw new NotImplementedException("Persistencia de refresh tokens pendiente.");
-        }
+            var (newToken, tokenExpiration) = _jwtService.CreateAccessToken(usuario);
+            var (refreshToken, refreshTokenExpiration) = _jwtService.CreateRefreshToken();
 
-        private (string token, DateTime exp) CreateAccessToken(Usuario u)
-        {
-            var exp = DateTime.UtcNow.AddMinutes(_jwtSettingsOptions.AccessTokenMinutes);
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettingsOptions.Key));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            await _refreshTokenService.GuardarTokenAsync(refreshToken, refreshTokenExpiration, usuario.Id);
 
-            var claims = new List<Claim>
+            await _context.SaveChangesAsync();
+
+            return new TokenResponse
             {
-                new Claim(JwtRegisteredClaimNames.Sub, u.IdGuid.ToString()),
-                new Claim(ClaimTypes.Name, u.Username),
-                new Claim("entidad", u.IdEntidad.ToString()),
-                new Claim("rolId", u.IdTipoUsuario.ToString()),
-                new Claim("rol", u.TipoUsuario?.Descripcion ?? u.IdTipoUsuario.ToString())
+                JwtToken = newToken,
+                JwtTokenExpiresAt = tokenExpiration,
+                RefreshToken = refreshToken,
+                RefreshTokenExpiresAt = refreshTokenExpiration,
+                RolId = usuario.TipoUsuario.IdGuid,
+                Rol = usuario.TipoUsuario?.Descripcion ?? usuario.IdTipoUsuario.ToString(),
+                IdEntidad = usuario.Entidad.IdGuid,
+                UserIdGuid = usuario.IdGuid,
+                Username = usuario.Username
             };
-
-            var token = new JwtSecurityToken(
-                issuer: _jwtSettingsOptions.Issuer,
-                audience: _jwtSettingsOptions.Audience,
-                claims: claims,
-                expires: exp,
-                signingCredentials: creds);
-
-            return (new JwtSecurityTokenHandler().WriteToken(token), exp);
         }
 
-        private (string token, DateTime exp) CreateRefreshToken()
+        public async Task RegistrarseAsync(NuevoUsuarioRequest request)
         {
-            var bytes = new byte[64];
-            RandomNumberGenerator.Fill(bytes);
-            var token = Convert.ToBase64String(bytes);
-            var exp = DateTime.UtcNow.AddDays(_jwtSettingsOptions.RefreshTokenDays);
-            return (token, exp);
+            var entidad = await _context.Entidades.FirstOrDefaultAsync(e => e.IdGuid.Equals(request.IdEntidad));
+
+            if (entidad == null)
+                throw new InvalidOperationException("Se produjo un error o los datos enviados no corresponden.");
+
+            var tipoUsuario = await _context.TiposUsuario.FirstOrDefaultAsync(e => e.IdGuid.Equals(request.IdTipoUsuario));
+
+            if (tipoUsuario == null)
+                throw new InvalidOperationException("Se produjo un error o los datos enviados no corresponden.");
+
+            var existeUsername = await _context.Usuarios.AnyAsync(u =>  u.Username.Equals(request.Username));
+
+            if (existeUsername)
+                throw new InvalidOperationException("El username ya existe, intente iniciar sesión.");
+
+            var decrypted = EncryptionHelper.DecryptAES(request.Password, _encryptionOptions.AesKey);
+            var passwordHash = BCrypt.Net.BCrypt.HashPassword(decrypted);
+
+            await _context.Usuarios.AddAsync(new Usuario
+            {
+                Nombre = request.Nombre,
+                IdGuid = Guid.NewGuid(),
+                Apellido = request.Apellido,
+                IdEntidad = entidad.Id,
+                FechaAlta = DateTime.Now,
+                Password = request.Password,
+                PasswordHash = passwordHash,
+                IdTipoUsuario = tipoUsuario.Id,
+                Username = request.Username,
+            });
+            
+            await _context.SaveChangesAsync();
         }
     }
 }

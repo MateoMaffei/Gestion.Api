@@ -15,15 +15,26 @@ namespace Gestion.Api.Controllers
 
         public AuthController(IAuthService auth) => _auth = auth;
 
-        [AllowAnonymous]
         [HttpPost("Login")]
+        [AllowAnonymous]
         public async Task<ActionResult<TokenResponse>> Login([FromBody] LoginRequest request)
-            => Ok(await _auth.LoginAsync(request));
-      
+        {
+            return Ok(await _auth.LoginAsync(request));
+        }
+
+        [HttpPost]
+        [HttpPost("Refresh")]
+        [AllowAnonymous]
+        public async Task<ActionResult<TokenResponse>> RefreshTockenAsync([FromBody] RefreshTokenRequest request )
+        {
+            return Ok(await _auth.RefreshTokenAsync(request.Token));
+        }
 
         [AllowAnonymous]
-        [HttpPost("Refresh")]
-        public async Task<ActionResult<TokenResponse>> Refresh([FromBody] RefreshRequest request)
-            => Ok(await _auth.RefreshAsync(request));
+        [HttpPost("Registro")]
+        public async Task Login([FromBody] NuevoUsuarioRequest request)
+        {
+            await _auth.RegistrarseAsync(request);
+        }
     }
 }
