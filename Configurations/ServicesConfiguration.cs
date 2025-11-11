@@ -13,6 +13,8 @@ namespace Gestion.Api.Configurations
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IUsuarioService, UsuarioService>();
             services.AddScoped<IRefreshTokenService, RefreshTokenService>();
+            services.AddScoped<ICategoriaService, CategoriaService>();
+            services.AddScoped<ICategoriaAtributoService, CategoriaAtributoService>();
 
             services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
         }

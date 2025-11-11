@@ -9,5 +9,15 @@
             Usuario = 3
         }
 
+        public enum EnumTipoDato
+        {
+            Entero = 1,
+            Decimal = 2,
+            Texto = 3,
+            Tabla = 4,
+            Booleano = 5,
+            Fecha = 6
+        }
+
     }
 }

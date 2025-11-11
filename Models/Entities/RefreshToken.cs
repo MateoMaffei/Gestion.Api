@@ -19,29 +19,13 @@ namespace Gestion.Api.Models.Entities
         public void Configure(EntityTypeBuilder<RefreshToken> builder)
         {
             builder.ToTable("RefreshToken");
-
             builder.HasKey(e => e.Id);
-
-            builder.Property(e => e.Id)
-                   .ValueGeneratedOnAdd();
-
-            builder.Property(e => e.IdGuid)
-                   .ValueGeneratedOnAdd()
-                   .IsRequired()
-                   .HasDefaultValueSql("(newid())");
-
-            builder.Property(e => e.IdUsuario)
-                   .IsRequired();
-
-            builder.Property(e => e.Token)
-                   .HasMaxLength(500)
-                   .IsRequired();
-
-            builder.Property(e => e.Expiracion)
-                   .IsRequired();
-
-            builder.Property(e => e.Revocado)
-                   .HasDefaultValue(false);
+            builder.Property(e => e.Id).ValueGeneratedOnAdd();
+            builder.Property(e => e.IdGuid).ValueGeneratedOnAdd().IsRequired().HasDefaultValueSql("(newid())");
+            builder.Property(e => e.IdUsuario).IsRequired();
+            builder.Property(e => e.Token).HasMaxLength(500).IsRequired();
+            builder.Property(e => e.Expiracion).IsRequired();
+            builder.Property(e => e.Revocado).HasDefaultValue(false);
 
             builder.HasOne(e => e.Usuario)
                    .WithOne(u => u.RefreshToken)

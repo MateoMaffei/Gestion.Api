@@ -1,4 +1,4 @@
-using Gestion.Api.Services.Interfaces;
+ï»¿using Gestion.Api.Services.Interfaces;
 using Gestion.Api.Services;
 using Microsoft.EntityFrameworkCore;
 using ApplicationDbContext = Gestion.Api.Repository.ApplicationDbContext;
@@ -41,34 +41,13 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.Key)),
             ClockSkew = TimeSpan.Zero
         };
-
-        //o.Events = new JwtBearerEvents
-        //{
-        //    OnAuthenticationFailed = context =>
-        //    {
-        //        Console.WriteLine($"? JWT Error: {context.Exception.Message}");
-        //        if (context.Exception.InnerException != null)
-        //            Console.WriteLine($"   ? Inner: {context.Exception.InnerException.Message}");
-        //        return Task.CompletedTask;
-        //    },
-        //    OnChallenge = context =>
-        //    {
-        //        Console.WriteLine("?? OnChallenge: Token inválido o ausente");
-        //        return Task.CompletedTask;
-        //    },
-        //    OnForbidden = context =>
-        //    {
-        //        Console.WriteLine("?? OnForbidden: Acceso denegado");
-        //        return Task.CompletedTask;
-        //    }
-        //};
     });
 
-//builder.Services.AddAuthorization(options =>
-//{
-//    options.AddPolicy("AdminOnly", p => p.RequireClaim("rolId", "1"));
-//    options.AddPolicy("EmpleadoOrAdmin", p => p.RequireClaim("rolId", "1", "2"));
-//});
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminOnly", p => p.RequireClaim("rolId", "31C76205-6DDD-43A6-8BC4-0C748DDFCFFA"));
+    options.AddPolicy("EmpleadoOrAdmin", p => p.RequireClaim("rolId", "31C76205-6DDD-43A6-8BC4-0C748DDFCFFA", "C1A321CC-7A0A-4079-A6D2-D17F9F045FD3"));
+});
 
 builder.Services.AddCors(options =>
 {
@@ -80,27 +59,6 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-app.MapPost("/debug/jwt", (string token) =>
-{
-    try
-    {
-        var handler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
-        var jwt = handler.ReadJwtToken(token.Replace("Bearer ", ""));
-        return Results.Ok(new
-        {
-            jwt.Issuer,
-            Audience = jwt.Audiences,
-            jwt.ValidTo,
-            Claims = jwt.Claims.Select(c => new { c.Type, c.Value })
-        });
-    }
-    catch (Exception ex)
-    {
-        return Results.BadRequest(ex.Message);
-    }
-});
-
-
 app.UseCors("AllowAll");
 
 if (app.Environment.IsDevelopment())
@@ -111,8 +69,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseAuthorization();
 app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapControllers();
 

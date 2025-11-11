@@ -1,4 +1,5 @@
 ﻿using Gestion.Api.Configurations.Options;
+using Gestion.Api.Helpers;
 using Gestion.Api.Models.Entities;
 using Gestion.Api.Services.Interfaces;
 using Microsoft.Extensions.Options;
@@ -26,10 +27,11 @@ namespace Gestion.Api.Services
             var claims = new List<Claim>
             {
                 new Claim(JwtRegisteredClaimNames.Sub, u.IdGuid.ToString()),
-                new Claim(ClaimTypes.Name, u.Username),
-                new Claim("entidad", u.IdEntidad.ToString()),
-                new Claim("rolId", u.IdTipoUsuario.ToString()),
-                new Claim("rol", u.TipoUsuario?.Descripcion ?? u.IdTipoUsuario.ToString())
+                new Claim(Constantes.Claim_Username, u.Username),
+                new Claim(Constantes.Claim_Entidad, u.Entidad.IdGuid.ToString()),
+                new Claim(Constantes.Claim_Usuario, u.IdGuid.ToString()),
+                new Claim(Constantes.Claim_IdRol, u.TipoUsuario.IdGuid.ToString()),
+                new Claim(Constantes.Claim_Rol, u.TipoUsuario?.Descripcion ?? u.IdTipoUsuario.ToString())
             };
 
             var token = new JwtSecurityToken(

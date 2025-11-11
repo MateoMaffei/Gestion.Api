@@ -28,20 +28,10 @@ namespace Gestion.Api.Models.Entities
         public void Configure(EntityTypeBuilder<TipoUsuario> builder)
         {
             builder.ToTable("TipoUsuario");
-
             builder.HasKey(t => t.Id);
-
-            builder.Property(t => t.Id)
-                   .ValueGeneratedOnAdd();
-
-            builder.Property(t => t.IdGuid)
-                   .ValueGeneratedOnAdd()
-                   .IsRequired()
-                   .HasDefaultValueSql("(newid())");
-
-            builder.Property(t => t.Descripcion)
-                   .HasMaxLength(150)
-                   .IsRequired();
+            builder.Property(t => t.Id).ValueGeneratedOnAdd();
+            builder.Property(t => t.IdGuid).ValueGeneratedOnAdd().IsRequired().HasDefaultValueSql("(newid())");
+            builder.Property(t => t.Descripcion).HasMaxLength(150).IsRequired();
 
             builder.HasData(new TipoUsuario
             {

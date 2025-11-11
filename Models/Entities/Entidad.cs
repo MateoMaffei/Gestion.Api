@@ -16,18 +16,10 @@ namespace Gestion.Api.Models.Entities
         public void Configure(EntityTypeBuilder<Entidad> builder)
         {
             builder.ToTable("Entidad");
-
             builder.HasKey(e => e.Id);
-
-            builder.Property(e => e.Id)
-                   .ValueGeneratedOnAdd();
-
-            builder.Property(e => e.IdGuid)
-                   .IsRequired();
-
-            builder.Property(e => e.Nombre)
-                   .HasMaxLength(200)
-                   .IsRequired();
+            builder.Property(e => e.Id).ValueGeneratedOnAdd();
+            builder.Property(e => e.IdGuid).IsRequired();
+            builder.Property(e => e.Nombre).HasMaxLength(200).IsRequired();
 
             builder.HasData(new Entidad
             {

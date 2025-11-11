@@ -26,49 +26,18 @@ namespace Gestion.Api.Models.Entities
         public void Configure(EntityTypeBuilder<Usuario> builder)
         {
             builder.ToTable("Usuario");
-
             builder.HasKey(u => u.Id);
+            builder.Property(u => u.Id).ValueGeneratedOnAdd();
+            builder.Property(u => u.IdGuid).ValueGeneratedOnAdd().IsRequired().HasDefaultValueSql("(newid())");
+            builder.Property(u => u.Username).HasMaxLength(100).IsRequired();
+            builder.Property(u => u.Password).HasMaxLength(200).IsRequired();
+            builder.Property(u => u.PasswordHash).HasMaxLength(200).IsRequired();
+            builder.Property(u => u.Nombre).HasMaxLength(100).IsRequired();
+            builder.Property(u => u.Apellido).HasMaxLength(100).IsRequired();
+            builder.Property(u => u.FechaAlta).HasColumnType("datetime2").HasDefaultValueSql("GETDATE()").IsRequired();
+            builder.Property(u => u.IdTipoUsuario).IsRequired();
+            builder.Property(u => u.IdEntidad).IsRequired();
 
-            builder.Property(u => u.Id)
-                   .ValueGeneratedOnAdd();
-
-            builder.Property(u => u.IdGuid)
-                   .ValueGeneratedOnAdd()
-                   .IsRequired()
-                   .HasDefaultValueSql("(newid())");
-
-            builder.Property(u => u.Username)
-                   .HasMaxLength(100)
-                   .IsRequired();
-
-            builder.Property(u => u.Password)
-                   .HasMaxLength(200)
-                   .IsRequired();
-
-            builder.Property(u => u.PasswordHash)
-                   .HasMaxLength(200)
-                   .IsRequired();
-
-            builder.Property(u => u.Nombre)
-                   .HasMaxLength(100)
-                   .IsRequired();
-
-            builder.Property(u => u.Apellido)
-                   .HasMaxLength(100)
-                   .IsRequired();
-
-            builder.Property(u => u.FechaAlta)
-                   .HasColumnType("datetime2")
-                   .HasDefaultValueSql("GETDATE()")
-                   .IsRequired();
-
-            builder.Property(u => u.IdTipoUsuario)
-                   .IsRequired();
-
-            builder.Property(u => u.IdEntidad)
-                   .IsRequired();
-
-            // Relaciones
             builder.HasOne(u => u.TipoUsuario)
                    .WithMany()
                    .HasForeignKey(u => u.IdTipoUsuario)

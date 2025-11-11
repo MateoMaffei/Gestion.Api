@@ -9,50 +9,32 @@ using Microsoft.AspNetCore.Mvc;
 namespace Gestion.Api.Controllers
 {
     [ApiController]
-    [Authorize(Policy = "AdminOnly")]
-    [Route("api/Categoria")]
-    public class CategoriaController : ControllerBase
+    [Route("api/Categoria/{idCategoria:guid}/Atributos")]
+    [Authorize]
+    public class CategoriaAtributosController : ControllerBase
     {
-        private readonly ILogger<CategoriaController> _logger;
+        private readonly ILogger<CategoriaAtributosController> _logger;
+        private readonly ICategoriaAtributoService _categoriaAtributoService;
+        private readonly IGenericRepository<Categoria> _categoriaRepository;
         private readonly IGenericRepository<Usuario> _usuarioRepository;
         private readonly IGenericRepository<Entidad> _entidadRepository;
-        private readonly ICategoriaService _categoriaService; 
 
-        public CategoriaController(ILogger<CategoriaController> logger, 
-                                   IGenericRepository<Usuario> usuarioRepository, 
-                                   IGenericRepository<Entidad> entidadRepository,
-                                   ICategoriaService categoriaService)
-        {
+        public CategoriaAtributosController(ILogger<CategoriaAtributosController> logger,
+                                            ICategoriaAtributoService categoriaAtributoService,
+                                            IGenericRepository<Usuario> usuarioRepository,
+                                            IGenericRepository<Categoria> categoriaRepository,
+                                            IGenericRepository<Entidad> entidadRepository)
+
+        { 
             _logger = logger;
-            _usuarioRepository = usuarioRepository;
+            _categoriaAtributoService = categoriaAtributoService;
             _entidadRepository = entidadRepository;
-            _categoriaService = categoriaService;
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> CrearCategoriaAsync([FromBody] CrearCategoriaRequest request)
-        {
-            var idEntidad = HttpContext.ObtenerIdEntidad();
-
-            var entidad = await _entidadRepository.GetByGuidAsync(idEntidad);
-
-            if (entidad is null)
-                throw new Exception("No se encontro la entidad especificada.");
-
-            var idUsuario = HttpContext.ObtenerIdUsuario();
-
-            var usuario = await _usuarioRepository.GetByGuidAsync(idUsuario);
-
-            if (usuario is null)
-                throw new Exception("No se encontro el usuario especificado.");
-
-            var response = await _categoriaService.CrearCategoria(request, entidad);
-
-            return Ok(response);
+            _usuarioRepository = usuarioRepository;
+            _categoriaRepository = categoriaRepository;
         }
 
         [HttpGet]
-        public async Task<IActionResult> ObtenerTodasAsync()
+        public async Task<IActionResult> ObtenerCategoriasAtribustosAsync(Guid idCategoria)
         {
             var idEntidad = HttpContext.ObtenerIdEntidad();
 
@@ -68,35 +50,13 @@ namespace Gestion.Api.Controllers
             if (usuario is null)
                 throw new Exception("No se encontro el usuario especificado.");
 
-            var categorias = await _categoriaService.ObtenerCategorias(entidad);
-
-            return Ok(categorias);
-        }
-
-        [HttpPut("/api/Categoria/{idCategoria:guid}")]
-        public async Task<IActionResult> ModificarCategoriaAsync(Guid idCategoria, [FromBody] ModificarCategoriaRequest request)
-        {
-            var idEntidad = HttpContext.ObtenerIdEntidad();
-
-            var entidad = await _entidadRepository.GetByGuidAsync(idEntidad);
-
-            if (entidad is null)
-                throw new Exception("No se encontro la entidad especificada.");
-
-            var idUsuario = HttpContext.ObtenerIdUsuario();
-
-            var usuario = await _usuarioRepository.GetByGuidAsync(idUsuario);
-
-            if (usuario is null)
-                throw new Exception("No se encontro el usuario especificado.");
-
-            var response = await _categoriaService.ModificarCategoria(idCategoria, request);
+            var response = await _categoriaAtributoService.ObtenerCategoriasAtributoAsync(idCategoria, entidad);
 
             return Ok(response);
         }
 
-        [HttpDelete("/api/Categoria/{idCategoria:guid}")]
-        public async Task<IActionResult> EliminarCategoriaAsync(Guid idCategoria)
+        [HttpPost]
+        public async Task<IActionResult> CrearCategoriasAtribustosAsync(Guid idCategoria, [FromBody] CategoriaAtributoRequest request)
         {
             var idEntidad = HttpContext.ObtenerIdEntidad();
 
@@ -112,7 +72,51 @@ namespace Gestion.Api.Controllers
             if (usuario is null)
                 throw new Exception("No se encontro el usuario especificado.");
 
-            await _categoriaService.EliminarCategoria(idCategoria);
+            var response = await _categoriaAtributoService.CrearCategoriasAtributoAsync(idCategoria, request);
+
+            return Ok(response);
+        }
+
+        [HttpPut("/api/Categorias/{idCategoria:guid}/Atributos/{idCategoriaAtributo:guid}")]
+        public async Task<IActionResult> ActualizarCategoriasAtribustosAsync(Guid idCategoria, Guid idCategoriaAtributo, [FromBody] CategoriaAtributoRequest request)
+        {
+            var idEntidad = HttpContext.ObtenerIdEntidad();
+
+            var entidad = await _entidadRepository.GetByGuidAsync(idEntidad);
+
+            if (entidad is null)
+                throw new Exception("No se encontro la entidad especificada.");
+
+            var idUsuario = HttpContext.ObtenerIdUsuario();
+
+            var usuario = await _usuarioRepository.GetByGuidAsync(idUsuario);
+
+            if (usuario is null)
+                throw new Exception("No se encontro el usuario especificado.");
+
+            var response = _categoriaAtributoService.ActualizarCategoriasAtributoAsync(idCategoria, idCategoriaAtributo, request);
+
+            return Ok(response);
+        }
+
+        [HttpDelete("/api/Categorias/{idCategoria:guid}/Atributos/{idCategoriaAtributo:guid}")]
+        public async Task<IActionResult> EliminarCategoriasAtribustosAsync(Guid idCategoria, Guid idCategoriaAtributo)
+        {
+            var idEntidad = HttpContext.ObtenerIdEntidad();
+
+            var entidad = await _entidadRepository.GetByGuidAsync(idEntidad);
+
+            if (entidad is null)
+                throw new Exception("No se encontro la entidad especificada.");
+
+            var idUsuario = HttpContext.ObtenerIdUsuario();
+
+            var usuario = await _usuarioRepository.GetByGuidAsync(idUsuario);
+
+            if (usuario is null)
+                throw new Exception("No se encontro el usuario especificado.");
+
+            await _categoriaAtributoService.EliminarCategoriasAtributoAsync(idCategoria, idCategoriaAtributo);
 
             return Ok();
         }

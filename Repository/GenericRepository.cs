@@ -29,7 +29,7 @@ namespace Gestion.Api.Repository
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public async Task<T?> GetByIdAsync(object id)
+        public async Task<T?> GetByIdAsync(int id)
         {
             return await _dbSet.FindAsync(id);
         }
@@ -91,7 +91,7 @@ namespace Gestion.Api.Repository
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public async Task DeleteAsync(object id)
+        public async Task DeleteAsync(int id)
         {
             var entity = await _dbSet.FindAsync(id);
             if (entity != null)
@@ -109,6 +109,28 @@ namespace Gestion.Api.Repository
         public async Task<bool> ExistsAsync(Expression<Func<T, bool>> predicate)
         {
             return await _dbSet.AnyAsync(predicate);
+        }
+
+        /// <summary>
+        /// Obtener una entidad por su IdGuid (presente en todos los modelos)
+        /// </summary>
+        /// <param name="id">Guid del registro</param>
+        /// <returns>Entidad encontrada o null</returns>
+        public async Task<T?> GetByGuidAsync(Guid id)
+        {
+            // Verificar que la entidad tenga la propiedad IdGuid
+            var property = typeof(T).GetProperty("IdGuid");
+            if (property == null)
+                throw new InvalidOperationException($"La entidad {typeof(T).Name} no tiene la propiedad 'IdGuid'.");
+
+            // Construir una expresión dinámica: e => e.IdGuid == id
+            var parameter = Expression.Parameter(typeof(T), "e");
+            var propertyAccess = Expression.Property(parameter, property);
+            var equals = Expression.Equal(propertyAccess, Expression.Constant(id));
+            var lambda = Expression.Lambda<Func<T, bool>>(equals, parameter);
+
+            // Ejecutar la búsqueda
+            return await _dbSet.AsNoTracking().FirstOrDefaultAsync(lambda);
         }
     }
 }
