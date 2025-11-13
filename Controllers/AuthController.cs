@@ -37,4 +37,4 @@ namespace Gestion.Api.Controllers
             await _auth.RegistrarseAsync(request);
         }
     }
-}
+}   

@@ -2,7 +2,7 @@
 {
     public class ModificarCategoriaRequest
     {
-        public string Descripcion { get; set; }
+        public string Descripcion { get; set; } = null!;
         public string? Icono { get; set; }
     }
 }

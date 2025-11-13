@@ -9,7 +9,6 @@ using Microsoft.AspNetCore.Mvc;
 namespace Gestion.Api.Controllers
 {
     [ApiController]
-    [Authorize(Policy = "AdminOnly")]
     [Route("api/Categoria")]
     public class CategoriaController : ControllerBase
     {

@@ -11,6 +11,12 @@ services:
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_URLS: http://+:8080
       ConnectionStrings__GestionDB: Server=sqlserver,1433;Database=GestionDB;User ID=sa;Password=YourStrong!Passw0rd;Encrypt=False;TrustServerCertificate=True;
+      Encryption__AesKey: hSdF2%35l^S8f#IG&K5USLFb5RLV4Y6J
+      Jwt__Issuer: Gestion.Api
+      Jwt__Audience: Gestion.Front
+      Jwt__Key: PabpboscH33Yj3RGc$9O9g6Y8!4$8iQH*4JelqM^
+      Jwt__AccessTokenMinutes: 15
+      Jwt__RefreshTokenDays: 2
     ports:
       - "8080:8080"
     depends_on:
@@ -27,13 +33,13 @@ services:
       MSSQL_PID: "Express"
       SA_PASSWORD: YourStrong!Passw0rd
     ports:
-      - "1433:1433"
+      - "1343:1433"
     volumes:
       - sqlserver-data:/var/opt/mssql
     healthcheck:
       test: ["CMD-SHELL", "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P $${SA_PASSWORD} -Q 'SELECT 1' || exit 1"]
       interval: 10s
-      timeout: 5s
+      timeout: 15s
       retries: 10
       start_period: 30s
     networks:
