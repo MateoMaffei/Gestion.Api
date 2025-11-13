@@ -56,7 +56,7 @@ namespace Gestion.Api.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CrearCategoriasAtribustosAsync(Guid idCategoria, [FromBody] CategoriaAtributoRequest request)
+        public async Task<IActionResult> CrearCategoriasAtribustosAsync(Guid idCategoria, [FromBody] List<CategoriaAtributoRequest> request)
         {
             var idEntidad = HttpContext.ObtenerIdEntidad();
 

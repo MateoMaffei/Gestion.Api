@@ -35,29 +35,36 @@ namespace Gestion.Api.Services
             return atributos.Select(a => (CategoriaAtributoResponse)a);
         }
 
-        public async Task<CategoriaAtributoResponse> CrearCategoriasAtributoAsync(Guid idCategoria, CategoriaAtributoRequest request)
+        public async Task<IEnumerable<CategoriaAtributoResponse>> CrearCategoriasAtributoAsync(Guid idCategoria, IEnumerable<CategoriaAtributoRequest> request)
         {
             var categoria = await _categoriaRepository.GetByGuidAsync(idCategoria);
 
             if (categoria is null)
                 throw new Exception($"No se encontro la categoria con id {idCategoria}");
 
-            var tipoDato = await _tipoDatoRepository.GetByGuidAsync(request.IdTipoDato);
-
-            if (tipoDato is null)
+            var tiposDatos = await _tipoDatoRepository.GetAllAsync();
+            
+            if (tiposDatos is null)
                 throw new Exception($"No se encontro el tipo de dato con id {idCategoria}");
 
-            var atributo = new CategoriaAtributo
+            List<CategoriaAtributoResponse> response = new List<CategoriaAtributoResponse>();
+
+            foreach (var item in request)
             {
-                EsObligatorio = request.EsObligatorio,
-                Nombre = request.Nombre,
-                IdTipoDato = tipoDato.Id,
-                IdCategoria = categoria.Id
-            };
+                var tipoDato = tiposDatos.First(t => t.IdGuid.Equals(item.IdTipoDato));
 
-            var response = await _categoriaAtributoRepository.AddAsync(atributo);
+                var atributo = new CategoriaAtributo
+                {
+                    EsObligatorio = item.EsObligatorio,
+                    Nombre = item.Nombre,
+                    IdTipoDato = tipoDato.Id,
+                    IdCategoria = categoria.Id
+                };
 
-            return (CategoriaAtributoResponse)response;
+                response.Add((CategoriaAtributoResponse)await _categoriaAtributoRepository.AddAsync(atributo));
+            }
+
+            return response;
         }
 
         public async Task<CategoriaAtributoResponse> ActualizarCategoriasAtributoAsync(Guid idCategoria, Guid idCategoriaAtributo, CategoriaAtributoRequest request)
