@@ -1,5 +1,6 @@
 ﻿using Gestion.Api.Models.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Proxies;
 using System.Reflection;
 
 namespace Gestion.Api.Repository
@@ -17,6 +18,13 @@ namespace Gestion.Api.Repository
         public DbSet<Producto> Producto { get; set; }
         public DbSet<ProductoAtributoValor> ProductoAtributoValor { get; set; }
         public DbSet<TipoDato> TipoDato { get; set; }
+
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            base.OnConfiguring(optionsBuilder);
+
+            optionsBuilder.UseLazyLoadingProxies();
+        }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

@@ -8,13 +8,16 @@ namespace Gestion.Api.Services
 {
     public class CategoriaAtributoService : ICategoriaAtributoService
     {
+        private readonly ILogger<CategoriaAtributoService> _logger;
         private readonly IGenericRepository<CategoriaAtributo> _categoriaAtributoRepository;
         private readonly IGenericRepository<Categoria> _categoriaRepository;
         private readonly IGenericRepository<TipoDato> _tipoDatoRepository;
-        public CategoriaAtributoService(IGenericRepository<CategoriaAtributo> categoriaAtributoRepository, 
+        public CategoriaAtributoService(ILogger<CategoriaAtributoService> logger,
+                                        IGenericRepository<CategoriaAtributo> categoriaAtributoRepository, 
                                         IGenericRepository<Categoria> categoriaRepository,
                                         IGenericRepository<TipoDato> tipoDatoRepository)
         {
+            _logger = logger;
             _categoriaAtributoRepository = categoriaAtributoRepository;
             _categoriaRepository = categoriaRepository;
             _tipoDatoRepository = tipoDatoRepository;
@@ -61,7 +64,11 @@ namespace Gestion.Api.Services
                     IdCategoria = categoria.Id
                 };
 
-                response.Add((CategoriaAtributoResponse)await _categoriaAtributoRepository.AddAsync(atributo));
+                var atr = await _categoriaAtributoRepository.AddAsync(atributo);
+
+                atr.TipoDato = tipoDato;
+
+                response.Add((CategoriaAtributoResponse)atr);
             }
 
             return response;
@@ -69,28 +76,36 @@ namespace Gestion.Api.Services
 
         public async Task<CategoriaAtributoResponse> ActualizarCategoriasAtributoAsync(Guid idCategoria, Guid idCategoriaAtributo, CategoriaAtributoRequest request)
         {
-            var categoria = await _categoriaRepository.GetByGuidAsync(idCategoria);
+            try
+            {
+                var categoria = await _categoriaRepository.GetByGuidAsync(idCategoria);
 
-            if (categoria is null)
-                throw new Exception($"No se encontro la categoria con id {idCategoria}");
+                if (categoria is null)
+                    throw new Exception($"No se encontro la categoria con id {idCategoria}");
 
-            var atributo = await _categoriaAtributoRepository.GetByGuidAsync(idCategoriaAtributo);
+                var atributo = await _categoriaAtributoRepository.GetByGuidAsync(idCategoriaAtributo);
 
-            if (atributo is null)
-                throw new Exception("No se encontro el atributo especificado.");
+                if (atributo is null)
+                    throw new Exception("No se encontro el atributo especificado.");
 
-            var tipoDato = await _tipoDatoRepository.GetByGuidAsync(request.IdTipoDato);
+                var tipoDato = await _tipoDatoRepository.GetByGuidAsync(request.IdTipoDato);
 
-            if (tipoDato is null)
-                throw new Exception($"No se encontro el tipo de dato con id {idCategoria}");
+                if (tipoDato is null)
+                    throw new Exception($"No se encontro el tipo de dato con id {idCategoria}");
 
-            atributo.Nombre = request.Nombre;
-            atributo.IdTipoDato = tipoDato.Id;
-            atributo.EsObligatorio = request.EsObligatorio;
+                atributo.Nombre = request.Nombre;
+                atributo.IdTipoDato = tipoDato.Id;
+                atributo.EsObligatorio = request.EsObligatorio;
 
-            await _categoriaAtributoRepository.UpdateAsync(atributo);
+                await _categoriaAtributoRepository.UpdateAsync(atributo);
 
-            return (CategoriaAtributoResponse)atributo;
+                return (CategoriaAtributoResponse)atributo;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError("Error al actualizar los atributos de la categoria.");
+                throw e;
+            }
         }
 
         public async Task EliminarCategoriasAtributoAsync(Guid idCategoria, Guid idCategoriaAtributo)

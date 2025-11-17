@@ -77,7 +77,7 @@ namespace Gestion.Api.Controllers
             return Ok(response);
         }
 
-        [HttpPut("/api/Categorias/{idCategoria:guid}/Atributos/{idCategoriaAtributo:guid}")]
+        [HttpPut("/api/Categoria/{idCategoria:guid}/Atributos/{idCategoriaAtributo:guid}")]
         public async Task<IActionResult> ActualizarCategoriasAtribustosAsync(Guid idCategoria, Guid idCategoriaAtributo, [FromBody] CategoriaAtributoRequest request)
         {
             var idEntidad = HttpContext.ObtenerIdEntidad();
@@ -99,7 +99,7 @@ namespace Gestion.Api.Controllers
             return Ok(response);
         }
 
-        [HttpDelete("/api/Categorias/{idCategoria:guid}/Atributos/{idCategoriaAtributo:guid}")]
+        [HttpDelete("/api/Categoria/{idCategoria:guid}/Atributos/{idCategoriaAtributo:guid}")]
         public async Task<IActionResult> EliminarCategoriasAtribustosAsync(Guid idCategoria, Guid idCategoriaAtributo)
         {
             var idEntidad = HttpContext.ObtenerIdEntidad();
